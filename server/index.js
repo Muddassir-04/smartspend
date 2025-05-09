@@ -1,87 +1,79 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('./models/User');
-require('dotenv').config();
+const bcrypt = require('bcrypt');
+const dotenv = require('dotenv');
 
+dotenv.config(); // Load .env early
+console.log('MONGO_URI:', process.env.MONGO_URI);
 const app = express();
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+// Suppress Mongoose strictQuery warning
+mongoose.set('strictQuery', false);
+
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+.then(() => console.log('Connected to MongoDB'))
+.catch((err) => console.error('MongoDB connection error:', err));
 
-// Register route
+// User schema
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+});
+const User = mongoose.model('User', userSchema);
+
+// Register endpoint
 app.post('/api/register', async (req, res) => {
+  const { email, password } = req.body;
+  console.log('Register request:', { email }); // Debug log
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    console.log('Existing user:', existingUser); // Debug log
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = new User({ email, password: hashedPassword });
+    const user = new User({ email: normalizedEmail, password: hashedPassword });
     await user.save();
-
-    // Generate JWT
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(201).json({ token, message: 'User registered successfully' });
   } catch (error) {
-    console.error('Error in /api/register:', error);
-    res.status(500).json({ message: 'Server error', error });
+    console.error('Register error:', error); // Debug log
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Login route
+// Login endpoint
 app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  console.log('Login request:', { email }); // Debug log
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Check if user exists
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    console.log('Found user:', user); // Debug log
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
-    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
-    // Generate JWT
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token, message: 'Login successful' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, message: 'Login successful' });
   } catch (error) {
-    console.error('Error in /api/login:', error);
-    res.status(500).json({ message: 'Server error', error });
+    console.error('Login error:', error); // Debug log
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
