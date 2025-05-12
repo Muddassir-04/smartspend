@@ -1,42 +1,50 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
-const Navbar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+function Navbar() {
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    console.log('Navbar: Token found:', token);
-    setIsAuthenticated(!!token);
-  }, [location]); // Re-run on route changes
+    const currentToken = localStorage.getItem('token');
+    setToken(currentToken);
+    console.log(`Navbar: Token found: ${currentToken ? 'Present' : 'Null'}`);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     console.log('Navbar: Logging out');
     localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    setToken(null);
     navigate('/login');
   };
 
   return (
-    <nav style={{ background: '#333', padding: '1rem', color: 'white' }}>
-      <ul style={{ listStyle: 'none', display: 'flex', gap: '1rem' }}>
-        <li><Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Home</Link></li>
-        {isAuthenticated ? (
-          <>
-            <li><Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>Dashboard</Link></li>
-            <li><button onClick={handleLogout} style={{ color: 'white', background: 'none', border: 'none', cursor: 'pointer' }}>Logout</button></li>
-          </>
-        ) : (
-          <>
-            <li><Link to="/login" style={{ color: 'white', textDecoration: 'none' }}>Login</Link></li>
-            <li><Link to="/register" style={{ color: 'white', textDecoration: 'none' }}>Register</Link></li>
-          </>
-        )}
-      </ul>
+    <nav className="bg-gray-800 text-white fixed w-full top-0 z-10 shadow-md">
+      <div className="mx-auto px-4 py-3 flex justify-between items-center">
+        <Link to="/" className="text-xl font-bold">SmartSpend</Link>
+        <div className="space-x-4">
+          <Link to="/" className="hover:text-blue-300">Home</Link>
+          {token ? (
+            <>
+              <Link to="/dashboard" className="hover:text-blue-300">Dashboard</Link>
+              <button
+                onClick={handleLogout}
+                className="hover:text-blue-300 focus:outline-none"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="hover:text-blue-300">Login</Link>
+              <Link to="/register" className="hover:text-blue-300">Register</Link>
+            </>
+          )}
+        </div>
+      </div>
     </nav>
   );
-};
+}
 
 export default Navbar;

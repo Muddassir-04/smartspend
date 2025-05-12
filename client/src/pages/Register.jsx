@@ -1,56 +1,66 @@
 import { useState } from 'react';
-     import axios from 'axios';
-     import { useNavigate } from 'react-router-dom';
+   import { useNavigate } from 'react-router-dom';
+   import axios from 'axios';
 
-     const Register = () => {
-       const [email, setEmail] = useState('');
-       const [password, setPassword] = useState('');
-       const [message, setMessage] = useState('');
-       const navigate = useNavigate();
+   function Register() {
+     const [email, setEmail] = useState('');
+     const [password, setPassword] = useState('');
+     const [error, setError] = useState('');
+     const navigate = useNavigate();
 
-       const handleSubmit = async (e) => {
-         e.preventDefault();
-         const payload = { email, password };
-         console.log('Submitting:', payload);
-         try {
-           const response = await axios.post('http://localhost:5000/api/register', payload);
-           console.log('API Response:', response.data);
-           setMessage(response.data.message);
-           localStorage.setItem('token', response.data.token); // Store JWT
-           navigate('/dashboard'); // Redirect to dashboard
-         } catch (error) {
-           console.error('Register error:', error.response?.data);
-           setMessage(error.response?.data.message || 'Registration failed');
-         }
-       };
-
-       return (
-         <div>
-           <h2>Register</h2>
-           <form onSubmit={handleSubmit}>
-             <div>
-               <label>Email:</label>
-               <input
-                 type="email"
-                 value={email}
-                 onChange={(e) => setEmail(e.target.value)}
-                 required
-               />
-             </div>
-             <div>
-               <label>Password:</label>
-               <input
-                 type="password"
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 required
-               />
-             </div>
-             <button type="submit">Register</button>
-           </form>
-           {message && <p>{message}</p>}
-         </div>
-       );
+     const handleSubmit = async (e) => {
+       e.preventDefault();
+       try {
+         await axios.post('http://localhost:5000/api/register', { email, password });
+         navigate('/login');
+       } catch (err) {
+         setError('Registration failed');
+         console.error(err);
+       }
      };
 
-     export default Register;
+     return (
+       <div className="flex items-center justify-center min-h-screen bg-gray-100">
+         <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+           <h2 className="text-2xl font-bold mb-4 text-center text-gray-900">Register</h2>
+           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+           <form onSubmit={handleSubmit}>
+             <div className="mb-4">
+               <label htmlFor="email" className="block text-sm font-medium text-gray-900">
+                 Email
+               </label>
+               <input
+                 type="email"
+                 id="email"
+                 value={email}
+                 onChange={(e) => setEmail(e.target.value)}
+                 className="mt-1 p-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 required
+               />
+             </div>
+             <div className="mb-4">
+               <label htmlFor="password" className="block text-sm font-medium text-gray-900">
+                 Password
+               </label>
+               <input
+                 type="password"
+                 id="password"
+                 value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 className="mt-1 p-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 required
+               />
+             </div>
+             <button
+               type="submit"
+               className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+             >
+               Register
+             </button>
+           </form>
+         </div>
+       </div>
+     );
+   }
+
+   export default Register;
