@@ -11,11 +11,13 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Register form submitted', { email, password });
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+    console.log('Register form submitted', { email: trimmedEmail, password: trimmedPassword });
     try {
-      const response = await axios.post('http://localhost:5000/api/register', {
-        email,
-        password,
+      const response = await axios.post('https://smartspend-backend-l8my.onrender.com/api/register', {
+        email: trimmedEmail,
+        password: trimmedPassword,
       });
       console.log('Registration successful', response.data);
       navigate('/login');

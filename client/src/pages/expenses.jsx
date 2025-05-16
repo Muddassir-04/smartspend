@@ -16,7 +16,7 @@ function Expenses() {
     const fetchExpenses = async () => {
       try {
         console.log('Fetching expenses with token:', token);
-        const response = await axios.get('http://localhost:5000/api/expenses', {
+        const response = await axios.get('https://smartspend-backend-l8my.onrender.com/api/expenses', {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Expenses fetched:', response.data);
@@ -41,7 +41,7 @@ function Expenses() {
     try {
       console.log('Adding expense with token:', token);
       await axios.post(
-        'http://localhost:5000/api/expenses',
+        'https://smartspend-backend-l8my.onrender.com/api/expenses',
         { amount, category, description },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -50,7 +50,7 @@ function Expenses() {
       setDescription('');
       setError('');
       // Refresh expenses
-      const response = await axios.get('http://localhost:5000/api/expenses', {
+      const response = await axios.get('https://smartspend-backend-l8my.onrender.com/api/expenses', {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('Expenses refreshed after adding:', response.data);

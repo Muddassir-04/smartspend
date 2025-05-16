@@ -14,7 +14,7 @@ function Login() {
     const trimmedPassword = password.trim();
     console.log('Login form submitted', { email: trimmedEmail, password: trimmedPassword });
     try {
-      const response = await axios.post('http://localhost:5000/api/login', { email: trimmedEmail, password: trimmedPassword });
+      const response = await axios.post('https://smartspend-backend-l8my.onrender.com/api/login', { email: trimmedEmail, password: trimmedPassword });
       console.log('Login successful', response.data);
       localStorage.setItem('token', response.data.token);
       navigate('/dashboard');
