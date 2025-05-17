@@ -5,7 +5,11 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://muddassir-04.github.io',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -76,8 +80,13 @@ app.post('/api/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    console.log('User found:', user ? user : 'No user found');
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials - User not found' });
+    }
+    console.log('Comparing passwords:', { stored: user.password, provided: password });
+    if (user.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials - Password mismatch' });
     }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
     res.status(200).json({ token, message: 'Login successful' });
@@ -140,25 +149,3 @@ app.get('/api/expenses', verifyToken, async (req, res) => {
 });
 
 app.listen(5000, () => console.log('Server running on port 5000'));
-
-app.post('/api/login', async (req, res) => {
-  console.log('Received /api/login request');
-  console.log('Request body:', req.body);
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    console.log('User found:', user ? user : 'No user found');
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials - User not found' });
-    }
-    console.log('Comparing passwords:', { stored: user.password, provided: password });
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Invalid credentials - Password mismatch' });
-    }
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1h' });
-    res.status(200).json({ token, message: 'Login successful' });
-  } catch (error) {
-    console.error('Error in /api/login:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
